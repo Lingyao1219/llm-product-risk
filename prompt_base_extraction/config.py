@@ -16,7 +16,7 @@ CONFIG = {
     'BATCH_SIZE': 50,
     
     # Input dataset configuration
-    'DATASET_PATH': 'data/samples.csv',
+    'DATASET_PATH': 'data_sample/samples.csv',
     'DATASET_FORMAT': 'csv',  # Options: 'pickle', 'csv', 'excel', 'json'
     'TEXT_COLUMN': 'text',  # Column name containing the text to analyze
     

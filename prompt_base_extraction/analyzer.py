@@ -5,8 +5,8 @@ import pandas as pd
 from openai import OpenAI
 from typing import Optional, Dict, Any, List, Union
 from tqdm import tqdm
-from config import CONFIG
-from prompt import *
+from prompt_base_extraction.config import CONFIG
+from prompt_base_extraction.prompt import *
 
 
 def parse_llm_response(response: str, default_value: Optional[Union[Dict, List]] = None) -> Union[Dict, List]:

@@ -1,4 +1,4 @@
-from config import CONFIG
+from prompt_base_extraction.config import CONFIG
 
 # System prompts for specific tasks
 SYSTEM_PROMPTS = {

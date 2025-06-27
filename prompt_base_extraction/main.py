@@ -1,7 +1,7 @@
 import pandas as pd
-from analyzer import Analyzer, parse_llm_response
-from config import CONFIG
-from prompt import get_system_prompt, get_task_prompt
+from prompt_base_extraction.analyzer import Analyzer, parse_llm_response
+from prompt_base_extraction.config import CONFIG
+from prompt_base_extraction.prompt import get_system_prompt, get_task_prompt
 
 def main():
     analyzer = Analyzer()
