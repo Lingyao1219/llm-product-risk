@@ -27,8 +27,7 @@ logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s -
 llm = ChatOpenAI(
     model=MODEL_NAME,
     temperature=0.0,
-    # Best practice: do not hardcode API keys. Use environment variable or config file.
-    api_key=None  # Set to None to avoid leaking secrets; should be set via environment variable
+    api_key="[REDACTED]"
 )
 
 # Valid LLM Products and NIST Categories
