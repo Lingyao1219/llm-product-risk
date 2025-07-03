@@ -2,12 +2,14 @@
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ValidationError
 from typing import List, Optional, Any
 import json
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
+import logging
+from openai import RateLimitError, AuthenticationError, APITimeoutError
 
 ################################################################################################################
 # 0. File path and global constants
@@ -17,6 +19,9 @@ OUTPUT_CSV_PATH = "data_extracted/extracted_llm_risks.csv"
 
 # Model configuration to match prompt_base_extraction
 MODEL_NAME = "gpt-4.1-mini"
+
+# Configure logging to capture important events
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Initialize the LLM with structured output
 llm = ChatOpenAI(
@@ -199,109 +204,145 @@ extraction_chain = extraction_prompt | structured_llm
 ################################################################################################################
 # 3. Safe extraction function with error handling
 ################################################################################################################
+def _validate_input_text(text: str) -> Optional[str]:
+    """
+    Validates the input text against a series of checks.
+    
+    Args:
+        text: The text to validate.
+        
+    Returns:
+        An error message string if validation fails, otherwise None.
+    """
+    if not isinstance(text, str):
+        return "Input validation failed: Non-string input provided"
+    
+    if not text.strip():
+        return "Input validation failed: Empty or whitespace-only text"
+    
+    # Check for content that is too short to be meaningful
+    if len(text.strip()) < 10:
+        return "Content too short: Text contains fewer than 10 characters"
+    
+    # Filter out common automated messages from Reddit
+    lower_text = text.lower()
+    automated_patterns = [
+        "i am a bot", "this action was performed automatically", 
+        "contact the moderators", "your submission has been removed",
+        "inadequate account karma"
+    ]
+    if any(pattern in lower_text for pattern in automated_patterns):
+        return "Content type: Automated message or moderation notice"
+        
+    return None
+
+
 def post_process_extraction(risks: List[dict], original_text: str) -> List[dict]:
     """Post-process extracted data to enforce guidelines"""
 
     cleaned_risks: List[dict] = []
 
     for risk in risks:
-        # At least one meaningful field besides quote
-        if any(
-            risk.get(field)
-            for field in ("LLMProduct", "NISTCategory", "RiskType")
-        ):
+        # Check if all three critical fields are non-null and non-empty
+        llm_product = risk.get("LLMProduct")
+        nist_category = risk.get("NISTCategory") 
+        risk_type = risk.get("RiskType")
+        
+        # All three fields must be present, non-null, not "null" string, and not empty
+        if (llm_product and llm_product != "null" and str(llm_product).strip() and
+            nist_category and nist_category != "null" and str(nist_category).strip() and
+            risk_type and risk_type != "null" and str(risk_type).strip()):
             cleaned_risks.append(risk)
 
     return cleaned_risks
 
 
 def safe_extract_llm_risks(text: str) -> dict:
-    """Safely extract LLM risk info from text and return detailed results with error information"""
+    """
+    Safely extracts LLM risk information from text with improved error handling.
+    
+    This function performs the following steps:
+    1. Validates the input text for basic quality and relevance.
+    2. Invokes an LLM chain to extract structured risk information.
+    3. Post-processes the extracted data to ensure it meets quality guidelines.
+    4. Provides detailed error messages for different failure scenarios,
+       including input validation, API errors, and content analysis failures.
 
-    # Input validation
-    if not isinstance(text, str):
-        return {
-            "risks": [],
-            "error_message": "Input validation failed: Non-string input provided"
-        }
-    
-    if not text.strip():
-        return {
-            "risks": [],
-            "error_message": "Input validation failed: Empty or whitespace-only text"
-        }
-    
-    # Check if text is too short for meaningful extraction
-    if len(text.strip()) < 10:
-        return {
-            "risks": [],
-            "error_message": "Content too short: Text contains fewer than 10 characters"
-        }
-    
-    # Check for obvious non-content patterns
-    lower_text = text.lower()
-    if any(pattern in lower_text for pattern in [
-        "i am a bot", "this action was performed automatically", 
-        "contact the moderators", "your submission has been removed",
-        "inadequate account karma"
-    ]):
-        return {
-            "risks": [],
-            "error_message": "Content type: Automated message or moderation notice"
-        }
+    Args:
+        text: The input string from which to extract LLM risks.
+
+    Returns:
+        A dictionary containing:
+        - "risks" (List[dict]): A list of extracted and processed risk dictionaries.
+        - "error_message" (Optional[str]): An error message if extraction fails, otherwise None.
+    """
+    # 1. Input Validation
+    validation_error = _validate_input_text(text)
+    if validation_error:
+        return {"risks": [], "error_message": validation_error}
 
     try:
+        # 2. Invoke LLM and process results
         result = extraction_chain.invoke({"text": text})
         extracted = result.model_dump()
-        risks = extracted.get("risks", [])
-        processed_risks = post_process_extraction(risks, text)
+        raw_risks = extracted.get("risks", [])
+        processed_risks = post_process_extraction(raw_risks, text)
         
+        # 3. Analyze results and generate specific feedback if no risks are found
         if not processed_risks:
-            # Check for specific reasons why no risks were found
-            has_llm_mention = any(product.lower() in lower_text for product in VALID_LLM_PRODUCTS)
-            has_nist_keywords = any(keyword in lower_text for keyword in [
-                "risk", "problem", "issue", "error", "fail", "bug", "wrong", 
-                "dangerous", "harmful", "bias", "privacy", "security", "safe"
-            ])
+            error_message = "Content analysis: No valid risks found after processing."
             
-            if not has_llm_mention:
-                error_msg = "Content analysis: No LLM products mentioned in text"
-            elif not has_nist_keywords:
-                error_msg = "Content analysis: No risk-related keywords found"
+            # If the LLM returned some data but it was filtered out
+            if raw_risks:
+                error_message = "Content analysis: Extracted data was incomplete and filtered by post-processing."
             else:
-                error_msg = "Content analysis: No extractable risks meeting NIST framework criteria"
+                # If LLM returned nothing, analyze why
+                lower_text = text.lower()
+                has_llm_mention = any(product.lower() in lower_text for product in VALID_LLM_PRODUCTS)
+                has_nist_keywords = any(keyword in lower_text for keyword in [
+                    "risk", "problem", "issue", "error", "fail", "bug", "wrong", 
+                    "dangerous", "harmful", "bias", "privacy", "security", "safe"
+                ])
+                
+                if not has_llm_mention:
+                    error_message = "Content analysis: No specified LLM products were mentioned."
+                elif not has_nist_keywords:
+                    error_message = "Content analysis: Text mentions an LLM but contains no risk-related keywords."
+                else:
+                    error_message = "Content analysis: No risks meeting the full criteria could be extracted."
             
-            return {
-                "risks": [],
-                "error_message": error_msg
-            }
+            return {"risks": [], "error_message": error_message}
         
-        return {
-            "risks": processed_risks,
-            "error_message": None
-        }
+        # 4. Return successful extraction
+        return {"risks": processed_risks, "error_message": None}
         
+    # 5. Handle specific exceptions from API and data validation
+    except RateLimitError as e:
+        error_msg = f"API Error: Rate limit exceeded. Please wait and try again. Details: {str(e)[:100]}"
+        logging.warning(error_msg)
+        return {"risks": [], "error_message": error_msg}
+        
+    except AuthenticationError as e:
+        error_msg = f"API Error: Authentication failed. Check API key. Details: {str(e)[:100]}"
+        logging.error(error_msg)
+        return {"risks": [], "error_message": error_msg}
+        
+    except APITimeoutError as e:
+        error_msg = f"API Error: Request timed out. Details: {str(e)[:100]}"
+        logging.warning(error_msg)
+        return {"risks": [], "error_message": error_msg}
+        
+    except ValidationError as e:
+        error_msg = f"Data Validation Error: LLM output did not match Pydantic schema. Details: {str(e)[:100]}"
+        logging.warning(error_msg)
+        return {"risks": [], "error_message": error_msg}
+
     except Exception as e:
         error_type = type(e).__name__
-        error_msg = str(e)
+        error_msg = f"Internal Processing Error: An unexpected error occurred. Type: {error_type}. Details: {str(e)[:100]}"
+        logging.error(error_msg, exc_info=True) # Log full traceback for unexpected errors
         
-        # Categorize different types of API/processing errors
-        if "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
-            detailed_error = f"API rate limit: {error_msg[:80]}..."
-        elif "timeout" in error_msg.lower():
-            detailed_error = f"API timeout: {error_msg[:80]}..."
-        elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
-            detailed_error = f"API authentication error: {error_msg[:80]}..."
-        elif "validation" in error_msg.lower():
-            detailed_error = f"Data validation error: {error_msg[:80]}..."
-        else:
-            detailed_error = f"Processing error ({error_type}): {error_msg[:80]}..."
-        
-        print(f"Extraction failed: {detailed_error}")
-        return {
-            "risks": [],
-            "error_message": detailed_error
-        }
+        return {"risks": [], "error_message": error_msg}
 
 ################################################################################################################
 # 4. Batch processing helper
