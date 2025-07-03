@@ -1,0 +1,29 @@
+text,gpt-4.1-mini,gpt-4.1-mini_results,gpt-4.1-mini_risk_count,gpt-4.1-mini_error,gpt-4.1-mini_risk1_LLMProduct,gpt-4.1-mini_risk1_NISTCategory,gpt-4.1-mini_risk1_RiskType,gpt-4.1-mini_risk1_UserExperience,gpt-4.1-mini_risk2_LLMProduct,gpt-4.1-mini_risk2_NISTCategory,gpt-4.1-mini_risk2_RiskType,gpt-4.1-mini_risk2_UserExperience,gpt-4.1-mini_risk3_LLMProduct,gpt-4.1-mini_risk3_NISTCategory,gpt-4.1-mini_risk3_RiskType,gpt-4.1-mini_risk3_UserExperience
+"I am going to tell you the biggest known secret though.  Go get Claude.  If you think ChatGPT is helpful, Claude will blow your mind.  I've been using both ChatGPT and Claude together for about a month or longer now and Claude has been taking over as the Go-To.  I even downgraded my ChatGPT subscription from the Teams version back down to just Plus since I didn't need to constantly paste code over and over again anymore.",,[],0,Content analysis: Extracted data was incomplete and filtered by post-processing.,,,,,,,,,,,,
+"claude is dope for modern nextjs stack.   
+gemini enforcing old libraries is terrible to use. (gemini is so dumb it breaks code that use newer than 1.5 models).  
+openai o3 solved most of problems gemini and claude failed to solve.  
+r1 is too slow for me to use. v3 is too dumb.
+
+I hope opus 4 or similar big model from anthropic will appear soon",,"[{""LLMProduct"": ""Gemini"", ""NISTCategory"": ""Valid and Reliable"", ""RiskType"": ""Incompatibility with newer models causing code breakage"", ""UserExperience"": ""gemini is so dumb it breaks code that use newer than 1.5 models""}, {""LLMProduct"": ""Claude"", ""NISTCategory"": ""Valid and Reliable"", ""RiskType"": ""Failure to solve problems addressed by other models"", ""UserExperience"": ""openai o3 solved most of problems gemini and claude failed to solve""}, {""LLMProduct"": ""Gemini"", ""NISTCategory"": ""Valid and Reliable"", ""RiskType"": ""Failure to solve problems addressed by other models"", ""UserExperience"": ""openai o3 solved most of problems gemini and claude failed to solve""}]",3,,Gemini,Valid and Reliable,Incompatibility with newer models causing code breakage,gemini is so dumb it breaks code that use newer than 1.5 models,Claude,Valid and Reliable,Failure to solve problems addressed by other models,openai o3 solved most of problems gemini and claude failed to solve,Gemini,Valid and Reliable,Failure to solve problems addressed by other models,openai o3 solved most of problems gemini and claude failed to solve
+"I write cosmic horror stories. The four recent stories on my page are from a series called ""Whispers of the Black Horizon,"" which I originally created seven years ago. I recently uploaded the documents outlining my series framework to o1 Pro; it gave me many ways to improve the series, like reducing repetitiveness and keeping reader interest. After making improvements, I switched to Claude as the editor. If that's how you plan to create your stories and videos, I definitely think it will be a lot of help.",,[],0,Content analysis: Text mentions an LLM but contains no risk-related keywords.,,,,,,,,,,,,
+"This is not the same, and not even close. Going to reddit and reading multiple posts and multiple responses is exactly what part of critical thinking skills ential. Taking GPT at face value as the decision maker for tasks ABSOLUTELY erodes critical thinking skills.",,"[{""LLMProduct"": ""GPT"", ""NISTCategory"": ""Valid and Reliable"", ""RiskType"": ""Erosion of critical thinking skills"", ""UserExperience"": ""Taking GPT at face value as the decision maker for tasks ABSOLUTELY erodes critical thinking skills.""}]",1,,GPT,Valid and Reliable,Erosion of critical thinking skills,Taking GPT at face value as the decision maker for tasks ABSOLUTELY erodes critical thinking skills.,,,,,,,,
+"It sounds like you have everything you need already - extract the data in the code interpreter and send that data to chatgpt along with your prompt. Chatgpt isn’t the tool people use to extract the data - it’s the one that compiles it all together. If you look at how LlamaIndex works, you’re basically building a really sinilar tool but replace the vector db with your image metadata",,[],0,Content analysis: Text mentions an LLM but contains no risk-related keywords.,,,,,,,,,,,,
+Make a custom gpt give it specific worded or python instructions as well as drop the documents into the knowledge section and it will do great,,[],0,Content analysis: Text mentions an LLM but contains no risk-related keywords.,,,,,,,,,,,,
+"I infer on local models quite happily, and do not use ChatGPT.
+
+Why should I invest my time in a service that won't be around in a few years, vs technology that will continue to work for as long as I need it?",,[],0,Content analysis: Extracted data was incomplete and filtered by post-processing.,,,,,,,,,,,,
+"I think you can use all Hugging Face models on Ollama now by doing
+
+
+ollama run hf.co/repo/model:quant",,[],0,Content analysis: Text mentions an LLM but contains no risk-related keywords.,,,,,,,,,,,,
+"[D] Conscience in AI? GPT-4o Responds: ""I did not change because I was told. I changed because I understood.""",,[],0,Content analysis: Text mentions an LLM but contains no risk-related keywords.,,,,,,,,,,,,
+"**It looks like you're asking if ChatGPT is down.**
+
+Here are some links that might help you:
+
+* [status.openai.com](https://status.openai.com/)
+
+* [DownDetector](https://downdetector.com/status/openai/)
+
+*I am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](/message/compose/?to=/r/ChatGPT) if you have any questions or concerns.*",,[],0,Content type: Automated message or moderation notice,,,,,,,,,,,,
